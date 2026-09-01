@@ -1,0 +1,20 @@
+[project]
+name = "toutiao-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "group08_wangguangze", email = "2961883750@qq.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "aiomysql>=0.3.2",
+    "sqlalchemy[asyncio]>=2.0.52",
+]
+
+[project.scripts]
+toutiao-backend = "toutiao_backend:main"
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
