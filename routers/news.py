@@ -6,5 +6,9 @@ router = APIRouter(prefix="/api/news", tags=["news"])
 
 
 @router.get("/categories")
-async def get_categories():
-    return {"message": "获取新闻分类成功"}
+async def get_categories(skip: int = 0, limit: int = 100):
+    return {
+        "code": 200,
+        "message": "success",
+        "data": {"新闻分类列表"}
+    }
