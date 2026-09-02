@@ -41,3 +41,29 @@ async def increase_news_views(db: AsyncSession, news_id: int):
 
     # 更新 -> 检查数据库是否真的命中了数据 -> 命中返回True
     return result.rowcount > 0
+
+
+# 获取相关新闻推荐
+async def get_related_news(db: AsyncSession, news_id: int, category_id: int, limit: int = 5):
+    # order_by 排序 -> 浏览量和发布时间
+    stmt = select(News).where(
+        News.id != news_id,
+        News.category_id == category_id
+    ).order_by(
+        News.views.desc(),  # 默认是升序， desc() 降序
+        News.publish_time.desc()
+    ).limit(limit)
+    result = await db.execute(stmt)
+    # return result.scalars().all()
+
+    related_news = result.scalars().all()
+    return [{
+        "id": news.id,
+        "title": news.title,
+        "content": news.content,
+        "image": news.image,
+        "author": news.author,
+        "publishTime": news.publish_time,
+        "categoryId": news.category_id,
+        "views": news.views
+    } for news in related_news]
