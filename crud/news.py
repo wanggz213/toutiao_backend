@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.news import Category, News
@@ -16,3 +16,11 @@ async def get_news_list(db: AsyncSession, category_id: int, skip: int = 0, limit
     stmt = select(News).where(News.category_id == category_id).offset(skip).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+# 获取新闻数量
+async def get_news_count(db: AsyncSession, category_id: int):
+    # 查询指定分类下的新闻数量
+    stmt = select(func.count(News.id)).where(News.category_id == category_id)
+    result = await db.execute(stmt)
+    return result.scalar_one()  # 只能有一个结果，否则会报错
