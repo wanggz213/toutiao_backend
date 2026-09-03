@@ -4,11 +4,13 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "group08_wangguangze", email = "2961883750@qq.com" }
+    { name = "wgz", email = "2961883750@qq.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
     "aiomysql>=0.3.2",
+    "fastapi[standard]>=0.141.1",
+    "passlib[bcrypt]==1.7.4",
     "sqlalchemy[asyncio]>=2.0.52",
 ]
 
