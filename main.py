@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from routers import news, users, favorite, history
+from toutiao_backend.routers import history, favorite, news, users
 from fastapi.middleware.cors import CORSMiddleware
 
-from utils.exception_handlers import register_exception_handlers
+from toutiao_backend.utils.exception_handlers import register_exception_handlers
 
 app = FastAPI()
 
