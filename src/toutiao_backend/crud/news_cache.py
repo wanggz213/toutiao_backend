@@ -1,8 +1,10 @@
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.encoders import jsonable_encoder
-from toutiao_backend.cache.news_cache import get_cached_categories, set_cache_categories
+from toutiao_backend.cache.news_cache import get_cached_categories, set_cache_categories, get_cache_news_list, \
+    set_cache_news_list
 from toutiao_backend.models.news import Category, News
+from toutiao_backend.schemas.base import NewsItemBase
 
 
 async def get_categories(db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -26,10 +28,28 @@ async def get_categories(db: AsyncSession, skip: int = 0, limit: int = 100):
 
 # 获取新闻列表
 async def get_news_list(db: AsyncSession, category_id: int, skip: int = 0, limit: int = 10):
+    # 先尝试从缓存中获取新闻列表
+    # 跳过的数量skip = (页码 - 1) * 每页数量 -> 页码 = 跳过的数量 // 每页数量 + 1
+    page = skip // limit + 1
+    cached_list = await get_cache_news_list(category_id, page, limit)
+    if cached_list:
+        # return cached_list  # 要的是ORM对象
+        return [News(**item) for item in cached_list]
+
     # 查询的是指定分类下的所有新闻
     stmt = select(News).where(News.category_id == category_id).offset(skip).limit(limit)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    news_list = result.scalars().all()
+
+    # 将数据写入缓存
+    if news_list:
+        # 先把 ORM 转换 字典 才能写入缓存
+        # 方法2：ORM 先转换为 Pydantic，再转换为字典
+        # by_alias = False 表示不使用别名，使用原始的字段名称
+        news_data = [NewsItemBase.model_validate(news).model_dump(mode="json", by_alias=False) for news in news_list]
+        await set_cache_news_list(category_id, page, limit, news_data)
+
+    return news_list
 
 
 # 获取新闻数量
