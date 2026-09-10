@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from toutiao_backend.config.db_conf import get_db
-from toutiao_backend.crud import news
+from toutiao_backend.crud import news, news_cache
 
 # 创建 APIrouter 实例
 # prefix 参数用于设置路由的前缀，tags 参数用于设置路由的标签
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/news", tags=["news"])
 
 @router.get("/categories")
 async def get_categories(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    categories = await news.get_categories(db, skip=skip, limit=limit)
+    categories = await news_cache.get_categories(db, skip=skip, limit=limit)
     return {
         "code": 200,
         "message": "success",
@@ -29,7 +29,7 @@ async def get_news_list(
 ):
     # 思路：处理分页规则 -> 查询新闻列表 -> 计算总量 -> 计算是否还有更多
     offset = (page - 1) * page_size
-    news_list = await news.get_news_list(db, category_id, skip=offset, limit=page_size)
+    news_list = await news_cache.get_news_list(db, category_id, skip=offset, limit=page_size)
     total = await news.get_news_count(db, category_id)
     # (跳过的 + 当前列表里边的数量) < 总量 → 还有更多
     has_more = (offset + len(news_list)) < total
@@ -47,7 +47,7 @@ async def get_news_list(
 # 添加获取新闻详情路由
 @router.get("/detail")
 async def get_news_detail(news_id: int = Query(..., alias="id"), db: AsyncSession = Depends(get_db)):
-    news_detail = await news.get_news_detail(db, news_id)
+    news_detail = await news_cache.get_news_detail(db, news_id)
     if not news_detail:
         raise HTTPException(status_code=404, detail="新闻不存在")
 
@@ -55,7 +55,7 @@ async def get_news_detail(news_id: int = Query(..., alias="id"), db: AsyncSessio
     if not view_rel:
         raise HTTPException(status_code=404, detail="新闻不存在")
 
-    related_news = await news.get_related_news(db, news_id, news_detail.category_id)
+    related_news = await news_cache.get_related_news(db, news_id, news_detail.category_id)
 
     return {
         "code": 200,
